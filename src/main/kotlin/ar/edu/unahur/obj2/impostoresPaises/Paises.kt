@@ -1,3 +1,4 @@
+import kotlin.math.roundToInt
 
 class Pais (
   val nombre: String,
@@ -21,12 +22,14 @@ class Pais (
     return idiomas!!.size > 1
   }
 
+  fun cantIdiomas(): Int = idiomas!!.size
+
   fun esIsla(): Boolean {
     return paisesLimitrofes!!.isEmpty()
   }
 
-  fun desidadPoblacional(): Int {
-    return (poblacion / superficie).toInt()
+  fun densidadPoblacional(): Int {
+    return (poblacion / superficie).roundToInt()
   }
 
   fun vecinoMasPoblado(): Pais? {
@@ -52,4 +55,23 @@ class Pais (
   fun cotizacionAMonedaDe(pais: Pais): Double {
     return (1 / this.cotizacionDolar!!) * pais.cotizacionDolar!!
   }
+}
+
+object Observatorio {
+  val paises: List<Pais> = mutableListOf()
+
+  fun sonLimitrofes(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.limitaCon(paises.first{it.nombre == pais2})
+  fun necesitanTraduccion(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.necesitaTraduccionCon(paises.first{it.nombre == pais2})
+  fun sonPotencialesAliados(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.aliadoPotencialCon(paises.first{it.nombre == pais2})
+  fun sePuedeComprarDe_En_(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.convieneComprar(paises.first{it.nombre == pais2})
+  fun cotizarMonedaDe_A_(pais1: String, pais2: String): Double = paises.first{it.nombre == pais1}.cotizacionAMonedaDe(paises.first{it.nombre == pais2})
+
+  fun paisesPorDensidad() = paises.sortedByDescending { it.densidadPoblacional() }
+  fun cincoPaisesMayorDensidadP() = paisesPorDensidad().map{it.codigoISO3}.take(5)
+
+  fun continentes() = paises.groupBy { it.continente }
+  fun continenteMasPlurinacional() = continentes().mapValues{p->p.value.sumOf{it.cantIdiomas()}}.maxByOrNull{it.value}!!.key
+
+  fun paisesInsulares() = paises.filter{it.esIsla()}
+  fun promedioDensidadIslas(): Double = paisesInsulares().map{it.densidadPoblacional().toDouble()}.sum() / paisesInsulares().size
 }
