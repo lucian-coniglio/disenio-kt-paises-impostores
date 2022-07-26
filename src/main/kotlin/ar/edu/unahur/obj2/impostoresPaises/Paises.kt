@@ -18,43 +18,25 @@ class Pais (
     idiomas = idiomas.orEmpty()
   }
 
-  fun esPlurinacional(): Boolean {
-    return idiomas!!.size > 1
-  }
+  fun esPlurinacional(): Boolean = return idiomas!!.size > 1
 
   fun cantIdiomas(): Int = idiomas!!.size
 
-  fun esIsla(): Boolean {
-    return paisesLimitrofes!!.isEmpty()
-  }
+  fun esIsla(): Boolean = return paisesLimitrofes!!.isEmpty()
 
-  fun densidadPoblacional(): Int {
-    return (poblacion / superficie).roundToInt()
-  }
+  fun densidadPoblacional(): Int = return (poblacion / superficie).roundToInt()
 
-  fun vecinoMasPoblado(): Pais? {
-    return paisesLimitrofes!!.maxByOrNull{it.poblacion}
-  }
+  fun vecinoMasPoblado(): Pais? = return paisesLimitrofes!!.maxByOrNull{it.poblacion}
 
-  fun limitaCon(pais: Pais): Boolean {
-    return paisesLimitrofes!!.contains(pais)
-  }
+  fun limitaCon(pais: Pais): Boolean = return paisesLimitrofes!!.contains(pais)
 
-  fun necesitaTraduccionCon(pais: Pais): Boolean {
-    return this.idiomas != pais.idiomas
-  }
+  fun necesitaTraduccionCon(pais: Pais): Boolean = return this.idiomas != pais.idiomas
 
-  fun aliadoPotencialCon(pais: Pais): Boolean {
-    return this.necesitaTraduccionCon(pais).not() and this.bloquesRegionales!!.contains(pais.bloquesRegionales!!.any())
-  }
+  fun aliadoPotencialCon(pais: Pais): Boolean = return this.necesitaTraduccionCon(pais).not() and this.bloquesRegionales!!.contains(pais.bloquesRegionales!!.any())
 
-  fun convieneComprar(pais: Pais): Boolean {
-    return pais.cotizacionDolar!! > this.cotizacionDolar!!
-  }
+  fun convieneComprar(pais: Pais): Boolean = return pais.cotizacionDolar!! > this.cotizacionDolar!!
 
-  fun cotizacionAMonedaDe(pais: Pais): Double {
-    return (1 / this.cotizacionDolar!!) * pais.cotizacionDolar!!
-  }
+  fun cotizacionAMonedaDe(pais: Pais): Double = return (1 / this.cotizacionDolar!!) * pais.cotizacionDolar!!
 }
 
 object Observatorio {
