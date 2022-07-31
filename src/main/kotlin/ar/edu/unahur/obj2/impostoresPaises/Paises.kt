@@ -5,55 +5,87 @@ class Pais (
   val codigoISO3: String,
   val codigoMonedaLocal: String,
   val continente: String,
-  val cotizacionDolar: Double?,
-  val poblacion: Long,
+  val cotizacionDolar: Double,
+  val poblacion: Int,
   val superficie: Double,
-  var paisesLimitrofes: List<Pais>?,
-  var bloquesRegionales: List<String>?,
-  var idiomas: List<String>?)
+  var paisesLimitrofes: MutableList<Pais>,
+  var bloquesRegionales: List<String>,
+  var idiomas: MutableList<String>)
 {
-  init {
-    paisesLimitrofes = paisesLimitrofes.orEmpty()
-    bloquesRegionales = bloquesRegionales.orEmpty()
-    idiomas = idiomas.orEmpty()
+
+  fun esPlurinacional(): Boolean {
+    return cantIdiomas() > 1
   }
 
-  fun esPlurinacional(): Boolean = return idiomas!!.size > 1
+  fun cantIdiomas(): Int = idiomas.size
 
-  fun cantIdiomas(): Int = idiomas!!.size
+  fun esIsla(): Boolean {
+    return paisesLimitrofes.isEmpty()
+  }
 
-  fun esIsla(): Boolean = return paisesLimitrofes!!.isEmpty()
+  fun densidadPoblacional(): Int {
+    return (poblacion / superficie).roundToInt()
+  }
 
-  fun densidadPoblacional(): Int = return (poblacion / superficie).roundToInt()
+  fun vecinoMasPoblado(): Pais? {
+    var masPoblado = this
+    paisesLimitrofes.forEach() {if(it.poblacion > masPoblado.poblacion) masPoblado = it}
+    return masPoblado
+  }
 
-  fun vecinoMasPoblado(): Pais? = return paisesLimitrofes!!.maxByOrNull{it.poblacion}
+  fun limitaCon(pais: Pais): Boolean {
+    return paisesLimitrofes.contains(pais)
+  }
 
-  fun limitaCon(pais: Pais): Boolean = return paisesLimitrofes!!.contains(pais)
+  fun necesitaTraduccionCon(pais: Pais): Boolean {
+    return idiomas.toSet().intersect(pais.idiomas.toSet()).isEmpty()
+  }
 
-  fun necesitaTraduccionCon(pais: Pais): Boolean = return this.idiomas != pais.idiomas
+  fun compartenBloqueRegional(pais: Pais): Boolean {
+    return bloquesRegionales.toSet().intersect(pais.bloquesRegionales.toSet()).isEmpty()
+  }
 
-  fun aliadoPotencialCon(pais: Pais): Boolean = return this.necesitaTraduccionCon(pais).not() and this.bloquesRegionales!!.contains(pais.bloquesRegionales!!.any())
+  fun aliadoPotencialCon(pais: Pais): Boolean {
+    return !this.necesitaTraduccionCon(pais) && this.compartenBloqueRegional(pais)
+  }
 
-  fun convieneComprar(pais: Pais): Boolean = return pais.cotizacionDolar!! > this.cotizacionDolar!!
+  fun convieneComprar(pais: Pais): Boolean {
+    return pais.cotizacionDolar > this.cotizacionDolar
+  }
 
-  fun cotizacionAMonedaDe(pais: Pais): Double = return (1 / this.cotizacionDolar!!) * pais.cotizacionDolar!!
+  fun cotizacionAMonedaDe(monto: Double, pais: Pais): Double {
+    return (monto / this.cotizacionDolar) * pais.cotizacionDolar
+  }
 }
 
 object Observatorio {
-  val paises: List<Pais> = mutableListOf()
+  val paises = mutableSetOf<Pais>()
 
-  fun sonLimitrofes(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.limitaCon(paises.first{it.nombre == pais2})
-  fun necesitanTraduccion(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.necesitaTraduccionCon(paises.first{it.nombre == pais2})
-  fun sonPotencialesAliados(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.aliadoPotencialCon(paises.first{it.nombre == pais2})
-  fun sePuedeComprarDe_En_(pais1: String, pais2: String): Boolean = paises.first{it.nombre == pais1}.convieneComprar(paises.first{it.nombre == pais2})
-  fun cotizarMonedaDe_A_(pais1: String, pais2: String): Double = paises.first{it.nombre == pais1}.cotizacionAMonedaDe(paises.first{it.nombre == pais2})
+  fun contienePais(pais: String) = paises.any{it.nombre == pais}
+
+  fun nombreDePais(pais: String): Pais {
+    check (contienePais(pais)) {
+      "El pais $pais no está registrado"
+    }
+    return paises.first{it.nombre == pais}
+  }
+
+  fun sonLimitrofes(pais1: String, pais2: String): Boolean = nombreDePais(pais1).limitaCon(nombreDePais(pais2))
+
+  fun necesitanTraduccion(pais1: String, pais2: String): Boolean = nombreDePais(pais1).necesitaTraduccionCon(nombreDePais(pais2))
+
+  fun sonPotencialesAliados(pais1: String, pais2: String): Boolean = nombreDePais(pais1).aliadoPotencialCon(nombreDePais(pais2))
+
+  fun sePuedeComprarDe_En_(pais1: String, pais2: String): Boolean = nombreDePais(pais1).convieneComprar(nombreDePais(pais2))
+
+  fun cotizarMonedaDe_A_(pais1: String, pais2: String, monto: Double): Double = nombreDePais(pais1).cotizacionAMonedaDe(monto, nombreDePais(pais2))
 
   fun paisesPorDensidad() = paises.sortedByDescending { it.densidadPoblacional() }
   fun cincoPaisesMayorDensidadP() = paisesPorDensidad().map{it.codigoISO3}.take(5)
 
   fun continentes() = paises.groupBy { it.continente }
-  fun continenteMasPlurinacional() = continentes().mapValues{p->p.value.sumOf{it.cantIdiomas()}}.maxByOrNull{it.value}!!.key
+  fun continenteMasPlurinacional() = continentes().mapValues{pais->pais.value.sumOf{it.cantIdiomas()}}.maxByOrNull{it.value}!!.key
 
   fun paisesInsulares() = paises.filter{it.esIsla()}
-  fun promedioDensidadIslas(): Double = paisesInsulares().map{it.densidadPoblacional().toDouble()}.sum() / paisesInsulares().size
+  fun promedioDensidadIslas(): Int = (paisesInsulares().sumOf { it.densidadPoblacional().toDouble() } / paisesInsulares().size).toInt()
 }
